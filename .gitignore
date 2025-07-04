@@ -13,13 +13,10 @@ __pycache__/
 env/
 venv/
 
-# Ignore PyCharm project files
-.idea/
-*.iml
-
 # VSCode / PyCharm / editor configs
 .vscode/
 .idea/
+*.iml
 *.sublime-project
 *.sublime-workspace
 
@@ -30,6 +27,7 @@ Thumbs.db
 # Project-specific ignores
 *.duckdb
 *.zip
+*.bat
 *.log
 
 # Environment/config/credential artifacts
