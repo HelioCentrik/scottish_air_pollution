@@ -1,0 +1,41 @@
+# Project fiels & folders
+docs/
+test/
+data/scottish_air_quality.duckdb
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Ignore PyCharm project files
+.idea/
+*.iml
+
+# VSCode / PyCharm / editor configs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Project-specific ignores
+*.duckdb
+*.zip
+*.log
+
+# Environment/config/credential artifacts
+.env
+*.bak
+*.tmp
+
+# Jupyter/IPython junk (if used later)
+.ipynb_checkpoints/
