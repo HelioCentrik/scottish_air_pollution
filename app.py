@@ -41,13 +41,16 @@ div.block-container               { padding-top: 1.2rem; }
     border-radius: 6px;
     padding     : 10px;
     box-shadow  : 0 0 8px #00112266;
+    overflow: hidden;
 }
+.block .element-container,
+.block .stPlotlyChart > div { height: 100% !important; width: 100% !important ;}
 
 /* Vertical legend bar */
 .legend-vert {
     height: 680px;
     width: 32px;
-    border-radius: 12px;
+    border-radius: 6px;
     background : linear-gradient(to top, #a8eec1, #006400);
     border : 1px solid #0090ff;
 }
@@ -176,7 +179,7 @@ def build_map_fig(pollutant):
         ),
         # INSET domain top-right
         geo2=dict(
-            domain=dict(x=[0.7, 0.92], y=[0.7, 0.92]),
+            domain=dict(x=[0.62, 0.8], y=[0.72, 0.96]),
             center=dict(lat=60.35, lon=-1.24),
             projection=dict(type="conic conformal",
                             parallels=[50, 60], rotation=dict(lon=0)),
@@ -186,10 +189,16 @@ def build_map_fig(pollutant):
             showcoastlines=False, showframe=True,
             framecolor="#0090FF", framewidth=3
         ),
-
+        legend=dict(
+            orientation="h",              # horizontal strip
+            yanchor="bottom", y=1.02,     # hover just above the map
+            xanchor="right",  x=1,        # right-aligned
+            bgcolor="rgba(0,0,0,0)",      # transparent
+            font=dict(color="#CCD")       # style to taste
+        ),
         height=PANEL_H,
         margin=dict(l=0, r=0, t=0, b=0),
-        dragmode=False,
+        # dragmode=False,
     )
 
     return fig
@@ -200,7 +209,7 @@ def build_line_fig(pollutant, agg_choice):
     dummy = pd.DataFrame({"x":[1,2,3], "y":[1,4,2]})
     fig = go.Figure(go.Scatter(x=dummy["x"], y=dummy["y"],
                                mode="lines", line=dict(color="#03dac6")))
-    fig.update_layout(height=240, margin=dict(l=0, r=0, t=5, b=5),
+    fig.update_layout(height=180, margin=dict(l=0, r=0, t=5, b=5),
                       plot_bgcolor="#1b1e27", paper_bgcolor="#1b1e27",
                       xaxis=dict(color="#8fa"), yaxis=dict(color="#8fa"))
     return fig
@@ -210,7 +219,7 @@ def build_line_fig(pollutant, agg_choice):
 st.markdown("<h2 style='text-align:center; color:#aad;'>Scottish Air Quality Dashboard</h2>", unsafe_allow_html=True)
 st.write("")
 
-_, left, center, right, _ = st.columns([2, 1, 6, 1, 2])
+_, left, center, right, _ = st.columns([2, 0.5, 7, 0.5, 2])
 
 with left:
     st.markdown('<div class="legend-vert equal-panel"></div>', unsafe_allow_html=True)
@@ -220,7 +229,11 @@ with center:
         st.markdown('<div class="block equal-panel">', unsafe_allow_html=True)
         map_fig = build_map_fig(pollutant)
         map_fig.update_layout(height=PANEL_H)
-        st.plotly_chart(map_fig, use_container_width=True)
+        st.plotly_chart(
+            map_fig,
+            use_container_width=True,
+            config=dict(displayModeBar=False)
+        )
         st.markdown('</div>', unsafe_allow_html=True)
 
 
