@@ -21,11 +21,12 @@ PANEL_H = 720
 TIME_H = 180
 
 # Inject a bit of CSS for rounded containers / colours
+
 st.markdown(r"""
 <style>
 /* Tighten top padding & page margin */
 section.main > div:first-child     { padding-top: 0rem; }
-div.block-container               { padding-top: 1.2rem; }
+div.block-container               { padding-top: 1.2rem }
 
 /* Main panel height */
 :root {{ --panel-h: {PANEL_H}px; }}
@@ -35,7 +36,7 @@ div.block-container               { padding-top: 1.2rem; }
 }}
 
 /* Universal visual card style */
-.block {
+div[data-testid="stPlotlyChart"] {
     background  : #1b1e27;
     border      : 1px solid #0090ff;   /* electric-blue */
     border-radius: 6px;
@@ -43,8 +44,8 @@ div.block-container               { padding-top: 1.2rem; }
     box-shadow  : 0 0 8px #00112266;
     overflow: hidden;
 }
-.block .element-container,
-.block .stPlotlyChart > div { height: 100% !important; width: 100% !important ;}
+# .block .element-container,
+div[data-testid="stPlotlyChart"] > div { height: 100% !important; width: 100% !important ;}
 
 /* Vertical legend bar */
 .legend-vert {
@@ -57,11 +58,10 @@ div.block-container               { padding-top: 1.2rem; }
 
 /* Make Plotly figures transparent & borderless; we’ll wrap them in .block */
 .stPlotlyChart > div {
-    background : transparent !important;
+    background : #1b1e27 !important;
 }
 </style>
 """, unsafe_allow_html=True)
-
 
 # ---------- 2. Sidebar controls ----------
 with st.sidebar:
@@ -78,7 +78,7 @@ with st.sidebar:
 @st.cache_data(show_spinner=False)
 def load_geometry():
     # ─── load ward + council shapes ──────────────────────────
-    MAIN_CUTOFF_LAT = 59.75  # tweak if Orkney should stay with mainland
+    MAIN_CUTOFF_LAT = 58.45  # tweak if Orkney should stay with mainland
 
     councils = gpd.read_parquet("data/scotland_ca_2019_simplified.parquet").to_crs(epsg=4326)
     wards = gpd.read_parquet("data/scotland_wa_2022_simplified.parquet").to_crs(epsg=4326)
@@ -170,21 +170,21 @@ def build_map_fig(pollutant):
     fig.update_layout(
         # MAIN panel domain (full width minus inset slice)
         geo=dict(
-            domain=dict(x=[0, 0.9], y=[0, 1]),
+            domain=dict(x=[0, 0.68], y=[0, 1]),
             center=dict(lat=56.8, lon=-4.4),
             projection=dict(type="conic conformal",
                             parallels=[50, 60], rotation=dict(lon=0)),
             fitbounds="locations",
-            visible=False, bgcolor="rgba(0,0,0,0)"
+            visible=False, bgcolor="#1b1e27"
         ),
         # INSET domain top-right
         geo2=dict(
-            domain=dict(x=[0.62, 0.8], y=[0.72, 0.96]),
+            domain=dict(x=[0.59, 0.83], y=[0.55, 0.96]),
             center=dict(lat=60.35, lon=-1.24),
             projection=dict(type="conic conformal",
                             parallels=[50, 60], rotation=dict(lon=0)),
             fitbounds="locations",
-            visible=False, bgcolor="rgba(0,0,0,0)",
+            visible=False, bgcolor="#1b1e27",
             showland=False, showcountries=False,
             showcoastlines=False, showframe=True,
             framecolor="#0090FF", framewidth=3
@@ -192,13 +192,14 @@ def build_map_fig(pollutant):
         legend=dict(
             orientation="h",              # horizontal strip
             yanchor="bottom", y=1.02,     # hover just above the map
-            xanchor="right",  x=1,        # right-aligned
+            xanchor="right",  x=0.975,        # right-aligned
             bgcolor="rgba(0,0,0,0)",      # transparent
             font=dict(color="#CCD")       # style to taste
         ),
+        # bgcolor="#FFFFFF",
         height=PANEL_H,
         margin=dict(l=0, r=0, t=0, b=0),
-        # dragmode=False,
+        dragmode=False,
     )
 
     return fig
@@ -219,7 +220,7 @@ def build_line_fig(pollutant, agg_choice):
 st.markdown("<h2 style='text-align:center; color:#aad;'>Scottish Air Quality Dashboard</h2>", unsafe_allow_html=True)
 st.write("")
 
-_, left, center, right, _ = st.columns([2, 0.5, 7, 0.5, 2])
+_, left, center, right, _ = st.columns([1, 0.333, 3.867, 0.75, 1])
 
 with left:
     st.markdown('<div class="legend-vert equal-panel"></div>', unsafe_allow_html=True)
@@ -239,17 +240,19 @@ with center:
 
 with right:
     st.markdown('<div class="block equal-panel">', unsafe_allow_html=True)
-    right_chart = go.Figure(go.Bar(y=["PM2.5","PM10"], x=[12,34],
-                                   orientation='h',
+    right_chart = go.Figure(go.Bar(y=[12, 34], x=["PM2.5","PM10"],
+                                   orientation='v',
                                    marker_color=["#66ee88","#22aaee"]))
-    right_chart.update_layout(height=PANEL_H, margin=dict(l=0,r=0,t=0,b=0),
-                              yaxis=dict(color="#8fa"), xaxis=dict(visible=False),
-                              plot_bgcolor="#1b1e27", paper_bgcolor="#1b1e27")
+    right_chart.update_layout(height=PANEL_H, margin=dict(l=20,r=20,t=0,b=0),
+                              xaxis=dict(color="#8fa"),
+                              plot_bgcolor="#1b1e27"
+                              # paper_bgcolor="#1b1e27"
+    )
     st.plotly_chart(right_chart, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # bottom full-width line chart
-_, time_chart, _ = st.columns([1, 4, 1])
+_, time_chart, _ = st.columns([1, 5, 1])
 
 line_fig = build_line_fig(pollutant, agg_choice)
 line_fig.update_layout(height=TIME_H)
