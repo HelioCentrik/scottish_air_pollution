@@ -8,6 +8,8 @@ import pandas as pd
 import geopandas as gpd
 import duckdb as ddb
 
+from ui_styles import inject_dashboard_style
+
 
 
 # ---------- 1. Page config & dark theme ----------
@@ -17,64 +19,18 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+PAGE_BG = str("#091023")
+# panel_bg = str("#1b1e27")
+PANEL_BG = str("rgba(0, 0, 0, 0)")
+PANEL_BORDER = str("#334466")
+
+SENSOR_FILL = str("#f00f3c")
+
 PANEL_H = 720
 LEGEND_H = PANEL_H * 1.03
 TIME_H = 180
 
-# BG_DARK = "#1b1e27"
-BG_DARK = "rgba(0, 0, 0, 0)"
-
-# Inject a bit of CSS for rounded containers / colours
-
-st.markdown(fr"""
-<style>
-/* Universal style for Plotly charts ONLY */
-div[data-testid="stPlotlyChart"] {{
-    background   : {BG_DARK};
-    border       : 1px solid #0090ff;
-    border-radius: 6px;
-    padding      : 10px;
-    box-shadow   : 0 0 8px #00112266;
-    overflow     : hidden;
-}}
-
-/* Optional: inner canvas */
-div[data-testid="stPlotlyChart"] > div {{
-    background: {BG_DARK} !important;
-    height: 100% !important;
-    width: 100% !important;
-}}
-
-/* Panel height + centering layout */
-.equal-panel {{
-    height: {PANEL_H}px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}}
-
-/* Use this ONLY for custom HTML cards (legend, future widgets) */
-.card {{
-    height       : {LEGEND_H}px;
-    background   : {BG_DARK};
-    border       : 1px solid #0090ff;
-    border-radius: 6px;
-    box-shadow   : 0 0 8px #00112266;
-    padding      : 10px;
-    overflow     : hidden;
-}}
-
-/* Legend: gradient bar with spacing inside .card */
-.legend-scale {{
-    width : 36px;
-    height: 100%;
-    margin: 12px;
-    border-radius: 2px;
-    background: linear-gradient(to top, #a8eec1, #006400);
-}}
-</style>
-""", unsafe_allow_html=True)
+inject_dashboard_style()
 
 # ---------- 2. Sidebar controls ----------
 with st.sidebar:
@@ -93,8 +49,8 @@ def load_geometry():
     # ─── load ward + council shapes ──────────────────────────
     MAIN_CUTOFF_LAT = 58.45  # tweak if Orkney should stay with mainland
 
-    councils = gpd.read_parquet("data/scotland_ca_2019_simplified.parquet").to_crs(epsg=4326)
-    wards = gpd.read_parquet("data/scotland_wa_2022_simplified.parquet").to_crs(epsg=4326)
+    councils = gpd.read_parquet("../data/scotland_ca_2019_simplified.parquet").to_crs(epsg=4326)
+    wards = gpd.read_parquet("../data/scotland_wa_2022_simplified.parquet").to_crs(epsg=4326)
 
     # ward helper cols (1-time)
     wards["ward_id"] = wards.index.astype(str)
@@ -112,7 +68,7 @@ def load_geometry():
     islands_w_js = json.loads(islands_wards.to_json())
 
     # Load sensor locations only
-    con = ddb.connect("data/scottish_air_quality.duckdb")
+    con = ddb.connect("../data/scottish_air_quality.duckdb")
     sens = con.execute("""
         SELECT DISTINCT latitude, longitude, location_name
         FROM vw_hours
@@ -153,7 +109,7 @@ def build_map_fig(pollutant):
     main_sens = sens[sens.latitude < MAIN_CUTOFF_LAT]
     fig.add_trace(go.Scattergeo(
         lon=main_sens.longitude, lat=main_sens.latitude,
-        mode="markers", marker=dict(size=6, color="#EE4455"),
+        mode="markers", marker=dict(size=6, color=SENSOR_FILL),
         geo="geo", hovertext=main_sens.location_name,
         name="Sensors"))
 
@@ -176,36 +132,40 @@ def build_map_fig(pollutant):
     isle_sens = sens[sens.latitude >= MAIN_CUTOFF_LAT]
     fig.add_trace(go.Scattergeo(
         lon=isle_sens.longitude, lat=isle_sens.latitude,
-        mode="markers", marker=dict(size=6, color="#EE4455"),
+        mode="markers", marker=dict(size=6, color=SENSOR_FILL),
         geo="geo2", hovertext=isle_sens.location_name,
-        name="Isl Sensors"))
+        name="Isl Sensors"
+    ))
 
     fig.update_layout(
         # MAIN panel domain (full width minus inset slice)
         geo=dict(
-            domain=dict(x=[0, 0.68], y=[0, 1]),
-            center=dict(lat=56.8, lon=-4.4),
             projection=dict(type="conic conformal",
-                            parallels=[50, 60], rotation=dict(lon=0)),
-            fitbounds="locations",
-            visible=False, bgcolor=str(BG_DARK)
+                            parallels=[54, 60], rotation=dict(lon=0)),
+            domain=dict(x=[0, 0.64], y=[0, 1]),
+            center=dict(lat=56.625, lon=-5.0),
+            lonaxis=dict(range=[-9.0, -1.0]),
+            lataxis=dict(range=[54.75, 59]),
+            # fitbounds="locations",
+            visible=False, bgcolor=PANEL_BG
         ),
         geo2=dict(
-            domain=dict(x=[0.62, 0.86], y=[0.55, 0.96]),
-            center=dict(lat=60.35, lon=-1.24),
+            framecolor=PANEL_BORDER, framewidth=4,
             projection=dict(type="conic conformal",
-                            parallels=[50, 60], rotation=dict(lon=0)),
-            fitbounds="locations",
-            visible=False, bgcolor=str(BG_DARK),
+                            parallels=[58, 61], rotation=dict(lon=0)),
+            domain=dict(x=[0.6, 0.92], y=[0.5, 0.96]),
+            center=dict(lat=59.8, lon=-2.125),
+            lonaxis=dict(range=[-4.0, -0.25]),
+            lataxis=dict(range=[58.75, 61.0]),
+            # fitbounds="locations",
+            visible=False, bgcolor=PANEL_BG,
             showland=False, showcountries=False,
             showcoastlines=False, showframe=True,
-            framecolor="#0090FF", framewidth=3
         ),
         legend=dict(
             orientation="h",              # horizontal strip
             yanchor="bottom", y=1.02,     # hover just above the map
             xanchor="right",  x=0.975,        # right-aligned
-            # bgcolor="rgba(0,0,0,0)",      # transparent
             font=dict(color="#CCD")       # style to taste
         ),
         # bgcolor="#FFFFFF",
@@ -219,11 +179,14 @@ def build_map_fig(pollutant):
 @st.cache_data(show_spinner=False)
 def build_line_fig(pollutant, agg_choice):
     # TODO: query DuckDB and return a line Plotly fig
-    dummy = pd.DataFrame({"x":[1,2,3], "y":[1,4,2]})
+    dummy = pd.DataFrame({
+        "x":[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        "y":[1, 4, 2, 8, 7, 13, 12, 8, 3, 4]
+    })
     fig = go.Figure(go.Scatter(x=dummy["x"], y=dummy["y"],
                                mode="lines", line=dict(color="#03dac6")))
-    fig.update_layout(height=180, margin=dict(l=0, r=0, t=5, b=5),
-                      plot_bgcolor=str(BG_DARK), paper_bgcolor=BG_DARK,
+    fig.update_layout(height=180, margin=dict(l=0, r=32, t=10, b=20),
+                      plot_bgcolor=PANEL_BG, paper_bgcolor=PANEL_BG,
                       xaxis=dict(color="#8fa"), yaxis=dict(color="#8fa"))
     return fig
 
@@ -233,7 +196,7 @@ st.markdown("<h2 style='text-align:center; color:#aad;'>Scottish Air Quality Das
 st.write("")
 
 with st.container():  # unified block so vertical spacing syncs
-    _, left, center, right, _ = st.columns([1, 0.333, 3.867, 0.75, 1])
+    _, left, center, right, _ = st.columns([1, 0.4, 3.85, 0.75, 1])
 
     with left:
         st.markdown(
@@ -247,7 +210,7 @@ with st.container():  # unified block so vertical spacing syncs
         with st.container() as c_map:
             # st.markdown('<div class="block equal-panel">', unsafe_allow_html=True)
             map_fig = build_map_fig(pollutant)
-            map_fig.update_layout(height=PANEL_H, paper_bgcolor=BG_DARK)
+            map_fig.update_layout(height=PANEL_H, paper_bgcolor=PANEL_BG)
             st.plotly_chart(
                 map_fig,
                 use_container_width=True,
@@ -261,22 +224,26 @@ with st.container():  # unified block so vertical spacing syncs
         right_chart = go.Figure(go.Bar(y=[12, 34, 23], x=["PM2.5","PM10", "NO2"],
                                        orientation='v',
                                        marker_color=["#66ee88","#22aaee", "#eeaa66"]))
-        right_chart.update_layout(height=PANEL_H, margin=dict(l=20,r=20,t=0,b=0),
+        right_chart.update_layout(height=PANEL_H, margin=dict(l=20, r=20, t=0, b=0),
                                   xaxis=dict(color="#8fa"),
-                                  plot_bgcolor=BG_DARK,
-                                  # paper_bgcolor="#1b1e27"
-        )
+                                  plot_bgcolor=PANEL_BG,
+                                  paper_bgcolor="rgba(0, 0, 0, 0)"
+                                  )
         st.plotly_chart(right_chart, use_container_width=True)
         # st.markdown('</div>', unsafe_allow_html=True)
 
 with st.container():
     # bottom full-width line chart
-    _, time_chart, _ = st.columns([1, 5, 1])
+    _, time_chart, _ = st.columns([1, 5.075, 1])
 
     line_fig = build_line_fig(pollutant, agg_choice)
     line_fig.update_layout(height=TIME_H)
     with time_chart:
         # st.markdown("<hr>", unsafe_allow_html=True)
         # st.markdown(f'<div class="block" style="height:{TIME_H}px">', unsafe_allow_html=True)
-        st.plotly_chart(line_fig, use_container_width=True)
+        st.plotly_chart(
+            line_fig,
+            use_container_width=True,
+            config=dict(displayModeBar=False)
+        )
         # st.markdown('</div>', unsafe_allow_html=True)
