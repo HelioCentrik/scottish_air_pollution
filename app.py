@@ -177,7 +177,6 @@ def build_map_fig(pollutant):
             fitbounds="locations",
             visible=False, bgcolor="#1b1e27"
         ),
-        # INSET domain top-right
         geo2=dict(
             domain=dict(x=[0.59, 0.83], y=[0.55, 0.96]),
             center=dict(lat=60.35, lon=-1.24),
@@ -229,7 +228,7 @@ with center:
     with st.container() as c_map:
         st.markdown('<div class="block equal-panel">', unsafe_allow_html=True)
         map_fig = build_map_fig(pollutant)
-        map_fig.update_layout(height=PANEL_H)
+        map_fig.update_layout(height=PANEL_H, paper_bgcolor="#1b1e27")
         st.plotly_chart(
             map_fig,
             use_container_width=True,
