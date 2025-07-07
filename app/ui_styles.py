@@ -1,17 +1,17 @@
-# ui_styles.py ────────────────────────────────────────────────────────────────────
+# app/ui_styles.py ────────────────────────────────────────────────────────────────────
 import streamlit as st
 
-import config as cnst
+from config import PAGE_BG, PANEL_BG, PANEL_H, PANEL_BORDER, LEGEND_H
 
 
 
 # Inject a bit of CSS for rounded containers / colours
 def inject_dashboard_style(
-        page_bg=cnst.PAGE_BG,
-        panel_bg=cnst.PANEL_BG,
-        border=cnst.PANEL_BORDER,
-        panel_h=cnst.PANEL_H,
-        legend_h=cnst.LEGEND_H
+        page_bg=PAGE_BG,
+        panel_bg=PANEL_BG,
+        border=PANEL_BORDER,
+        panel_h=PANEL_H,
+        legend_h=LEGEND_H
 ):
     st.markdown(fr"""
     <style>
