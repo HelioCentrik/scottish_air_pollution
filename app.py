@@ -18,10 +18,11 @@ st.set_page_config(
 )
 
 PANEL_H = 720
+LEGEND_H = PANEL_H * 1.03
 TIME_H = 180
 
-BG_DARK = "#1b1e27"
-# BG_DARK = "rgba(0, 0, 0, 0)"
+# BG_DARK = "#1b1e27"
+BG_DARK = "rgba(0, 0, 0, 0)"
 
 # Inject a bit of CSS for rounded containers / colours
 
@@ -55,6 +56,7 @@ div[data-testid="stPlotlyChart"] > div {{
 
 /* Use this ONLY for custom HTML cards (legend, future widgets) */
 .card {{
+    height       : {LEGEND_H}px;
     background   : {BG_DARK};
     border       : 1px solid #0090ff;
     border-radius: 6px;
@@ -66,7 +68,7 @@ div[data-testid="stPlotlyChart"] > div {{
 /* Legend: gradient bar with spacing inside .card */
 .legend-scale {{
     width : 36px;
-    height: calc(100% - 24px);
+    height: 100%;
     margin: 12px;
     border-radius: 2px;
     background: linear-gradient(to top, #a8eec1, #006400);
@@ -143,7 +145,7 @@ def build_map_fig(pollutant):
         geojson=main_c_js, locations=main_councils["name"],
         z=[1] * len(main_councils), showscale=False,
         colorscale=[[0, "rgba(0,0,0,0)"], [1, "rgba(0,0,0,0)"]],
-        marker_line_color="black", marker_line_width=1,
+        marker_line_color="black", marker_line_width=0.5,
         featureidkey="properties.name",
         name="Main councils"))
 
@@ -167,7 +169,7 @@ def build_map_fig(pollutant):
         geojson=islands_c_js, locations=islands_councils["name"],
         z=[1] * len(islands_councils), showscale=False,
         colorscale=[[0, "rgba(0,0,0,0)"], [1, "rgba(0,0,0,0)"]],
-        marker_line_color="black", marker_line_width=1,
+        marker_line_color="black", marker_line_width=0.5,
         featureidkey="properties.name", geo="geo2",
         name="Islands councils"))
 
@@ -221,7 +223,7 @@ def build_line_fig(pollutant, agg_choice):
     fig = go.Figure(go.Scatter(x=dummy["x"], y=dummy["y"],
                                mode="lines", line=dict(color="#03dac6")))
     fig.update_layout(height=180, margin=dict(l=0, r=0, t=5, b=5),
-                      plot_bgcolor=BG_DARK, paper_bgcolor=BG_DARK,
+                      plot_bgcolor=str(BG_DARK), paper_bgcolor=BG_DARK,
                       xaxis=dict(color="#8fa"), yaxis=dict(color="#8fa"))
     return fig
 
@@ -256,9 +258,9 @@ with st.container():  # unified block so vertical spacing syncs
 
     with right:
         # st.markdown('<div class="block equal-panel">', unsafe_allow_html=True)
-        right_chart = go.Figure(go.Bar(y=[12, 34], x=["PM2.5","PM10"],
+        right_chart = go.Figure(go.Bar(y=[12, 34, 23], x=["PM2.5","PM10", "NO2"],
                                        orientation='v',
-                                       marker_color=["#66ee88","#22aaee"]))
+                                       marker_color=["#66ee88","#22aaee", "#eeaa66"]))
         right_chart.update_layout(height=PANEL_H, margin=dict(l=20,r=20,t=0,b=0),
                                   xaxis=dict(color="#8fa"),
                                   plot_bgcolor=BG_DARK,
