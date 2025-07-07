@@ -230,49 +230,51 @@ def build_line_fig(pollutant, agg_choice):
 st.markdown("<h2 style='text-align:center; color:#aad;'>Scottish Air Quality Dashboard</h2>", unsafe_allow_html=True)
 st.write("")
 
-_, left, center, right, _ = st.columns([1, 0.333, 3.867, 0.75, 1])
+with st.container():  # unified block so vertical spacing syncs
+    _, left, center, right, _ = st.columns([1, 0.333, 3.867, 0.75, 1])
 
-with left:
-    st.markdown(
-        '<div class="card equal-panel">'
-        '    <div class="legend-scale"></div>'
-        '</div>',
-        unsafe_allow_html=True
-    )
-
-with center:
-    with st.container() as c_map:
-        st.markdown('<div class="block equal-panel">', unsafe_allow_html=True)
-        map_fig = build_map_fig(pollutant)
-        map_fig.update_layout(height=PANEL_H, paper_bgcolor=BG_DARK)
-        st.plotly_chart(
-            map_fig,
-            use_container_width=True,
-            config=dict(displayModeBar=False)
+    with left:
+        st.markdown(
+            '<div class="card equal-panel">'
+            '    <div class="legend-scale"></div>'
+            '</div>',
+            unsafe_allow_html=True
         )
-        st.markdown('</div>', unsafe_allow_html=True)
+
+    with center:
+        with st.container() as c_map:
+            # st.markdown('<div class="block equal-panel">', unsafe_allow_html=True)
+            map_fig = build_map_fig(pollutant)
+            map_fig.update_layout(height=PANEL_H, paper_bgcolor=BG_DARK)
+            st.plotly_chart(
+                map_fig,
+                use_container_width=True,
+                config=dict(displayModeBar=False)
+            )
+            # st.markdown('</div>', unsafe_allow_html=True)
 
 
-with right:
-    st.markdown('<div class="block equal-panel">', unsafe_allow_html=True)
-    right_chart = go.Figure(go.Bar(y=[12, 34], x=["PM2.5","PM10"],
-                                   orientation='v',
-                                   marker_color=["#66ee88","#22aaee"]))
-    right_chart.update_layout(height=PANEL_H, margin=dict(l=20,r=20,t=0,b=0),
-                              xaxis=dict(color="#8fa"),
-                              plot_bgcolor=BG_DARK,
-                              # paper_bgcolor="#1b1e27"
-    )
-    st.plotly_chart(right_chart, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    with right:
+        # st.markdown('<div class="block equal-panel">', unsafe_allow_html=True)
+        right_chart = go.Figure(go.Bar(y=[12, 34], x=["PM2.5","PM10"],
+                                       orientation='v',
+                                       marker_color=["#66ee88","#22aaee"]))
+        right_chart.update_layout(height=PANEL_H, margin=dict(l=20,r=20,t=0,b=0),
+                                  xaxis=dict(color="#8fa"),
+                                  plot_bgcolor=BG_DARK,
+                                  # paper_bgcolor="#1b1e27"
+        )
+        st.plotly_chart(right_chart, use_container_width=True)
+        # st.markdown('</div>', unsafe_allow_html=True)
 
-# bottom full-width line chart
-_, time_chart, _ = st.columns([1, 5, 1])
+with st.container():
+    # bottom full-width line chart
+    _, time_chart, _ = st.columns([1, 5, 1])
 
-line_fig = build_line_fig(pollutant, agg_choice)
-line_fig.update_layout(height=TIME_H)
-with time_chart:
-    # st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown(f'<div class="block" style="height:{TIME_H}px">', unsafe_allow_html=True)
-    st.plotly_chart(line_fig, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    line_fig = build_line_fig(pollutant, agg_choice)
+    line_fig.update_layout(height=TIME_H)
+    with time_chart:
+        # st.markdown("<hr>", unsafe_allow_html=True)
+        # st.markdown(f'<div class="block" style="height:{TIME_H}px">', unsafe_allow_html=True)
+        st.plotly_chart(line_fig, use_container_width=True)
+        # st.markdown('</div>', unsafe_allow_html=True)
