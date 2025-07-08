@@ -11,13 +11,17 @@ con = duckdb.connect("../data/scottish_air_quality.duckdb")
 # """).fetchdf()
 
 print(con.execute("""
-    CREATE VIEW vw_hours AS
+    CREATE OR REPLACE VIEW vw_hours AS
     SELECT
         loc.location_id,
         loc.location_name,
         loc.locality,
         loc.latitude,
         loc.longitude,
+        wrd.geo_id,
+        wrd.ward_id,
+        wrd.ward_label,
+        wrd.ward_name,
         sen.sensor_id,
         sen.parameter_name,
         sen.display_name,
@@ -34,13 +38,15 @@ print(con.execute("""
         strftime(CAST(meas.datetime_from AS Date), '%-m') AS "month_num",
         strftime(CAST(meas.datetime_from AS Date), '%B') AS "month_name"
     FROM locations loc
+        INNER JOIN location_wards wrd
+            ON loc.location_id = wrd.location_id
         INNER JOIN sensors sen
             ON loc.location_id = sen.location_id
         INNER JOIN measurements meas
             ON sen.sensor_id = meas.sensor_id;
 """))
 
-print(con.execute("SELECT * FROM vw_hours").fetchdf())
+print(con.execute("SELECT COUNT(*) FROM vw_hours").fetchdf())
 # print(df.head(5).to_string(index=False))
 
 con.close()

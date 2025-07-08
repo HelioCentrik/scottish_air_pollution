@@ -1,13 +1,43 @@
 # app/maps.py ────────────────────────────────────────────────────────────────────
 import json
 
-import duckdb as ddb
+import pandas as pd
 import geopandas as gpd
+import duckdb as ddb
 import streamlit as st
 from plotly import graph_objects as go
+from shapely.geometry import Point
 
 from config import SENSOR_FILL, PANEL_BG, PANEL_BORDER, PANEL_H
 
+
+
+# def map_sensors_to_wards(sens_df: pd.DataFrame, wards_gdf: gpd.GeoDataFrame, radius_km=50):
+#     # Create GeoDataFrame in lat/lon
+#     sens_gdf = gpd.GeoDataFrame(
+#         sens_df.copy(),
+#         geometry=gpd.points_from_xy(sens_df.longitude, sens_df.latitude),
+#         crs="EPSG:4326"
+#     )
+#
+#     # Reproject both to a metric CRS (British National Grid, EPSG:27700)
+#     sens_proj = sens_gdf.to_crs(epsg=27700)
+#     wards_proj = wards_gdf.to_crs(epsg=27700)
+#
+#     # Buffer sensors to radius (in meters)
+#     sens_proj["buffer"] = sens_proj.geometry.buffer(radius_km * 1000)
+#
+#     # Create GeoDataFrame of buffers
+#     sens_buffers = sens_proj.set_geometry("buffer")
+#
+#     # Spatial join: which wards intersect which sensor buffer?
+#     joined = gpd.sjoin(wards_proj, sens_buffers, how="inner", predicate="intersects")
+#     print(joined.columns)
+#
+#     # Result: each row is a ward matched to a sensor
+#     return joined[[
+#         "location_name", "latitude", "longitude", "geometry_right", "ward_id", "label", "name"
+#     ]]
 
 
 @st.cache_data(show_spinner=False)
@@ -36,22 +66,25 @@ def load_geometry():
     # Load sensor locations only
     con = ddb.connect("../data/scottish_air_quality.duckdb")
     sens = con.execute("""
-        SELECT DISTINCT latitude, longitude, location_name
-        FROM vw_hours
+        SELECT DISTINCT location_id, latitude, longitude, ward_id, location_name, ward_name
+        FROM tbl_hours
         WHERE latitude IS NOT NULL AND longitude IS NOT NULL
     """).df()
     con.close()
 
+    all_wards = pd.concat([main_wards, islands_wards], ignore_index=True)
+    sensor_wards = sens
+
     return (main_councils, islands_councils, main_wards, islands_wards,
             main_w_js, islands_w_js, main_c_js, islands_c_js,
-            sens, MAIN_CUTOFF_LAT)
+            sensor_wards, MAIN_CUTOFF_LAT)
 
 
 @st.cache_data(show_spinner=False)
 def build_map_fig(pollutant):
     (main_councils, islands_councils, main_wards, islands_wards,
      main_w_js, islands_w_js, main_c_js, islands_c_js,
-     sens, MAIN_CUTOFF_LAT) = load_geometry()
+     sensor_wards, MAIN_CUTOFF_LAT) = load_geometry()
 
     fig = go.Figure()
 
@@ -72,7 +105,7 @@ def build_map_fig(pollutant):
         name="Main councils"))
 
     # sensors that belong in main panel
-    main_sens = sens[sens.latitude < MAIN_CUTOFF_LAT]
+    main_sens = sensor_wards[sensor_wards.latitude < MAIN_CUTOFF_LAT]
     fig.add_trace(go.Scattergeo(
         lon=main_sens.longitude, lat=main_sens.latitude,
         mode="markers", marker=dict(size=6, color=SENSOR_FILL),
@@ -95,7 +128,7 @@ def build_map_fig(pollutant):
         featureidkey="properties.name", geo="geo2",
         name="Islands councils"))
 
-    isle_sens = sens[sens.latitude >= MAIN_CUTOFF_LAT]
+    isle_sens = sensor_wards[sensor_wards.latitude >= MAIN_CUTOFF_LAT]
     fig.add_trace(go.Scattergeo(
         lon=isle_sens.longitude, lat=isle_sens.latitude,
         mode="markers", marker=dict(size=6, color=SENSOR_FILL),
